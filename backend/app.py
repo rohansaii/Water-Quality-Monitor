@@ -29,7 +29,10 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Database Configuration - PostgreSQL only
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:3906DW82@localhost:5432/watermonitor")
+db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:3906DW82@localhost:5432/watermonitor")
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+DATABASE_URL = db_url
 
 # Create engine and session
 engine = create_engine(DATABASE_URL)
