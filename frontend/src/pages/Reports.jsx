@@ -285,11 +285,12 @@ const Reports = () => {
     <div className="min-h-screen flex bg-sky-50 font-sans">
       <div className="w-64 bg-sky-600 text-white flex flex-col p-6 shadow-xl">
         <h2 className="text-2xl font-bold mb-8 italic">💧 WQM</h2>
-        <ul className="space-y-2 flex-1">
+        {/* <ul className="space-y-2 flex-1">
           <li onClick={() => navigate("/dashboard")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer">🏠 Dashboard Overview</li>
           <li onClick={() => navigate("/map")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer">📍 Live Map View</li>
           <li className="bg-white text-sky-600 p-3 rounded-lg font-bold shadow-md">📊 Analytics & Reports</li>
-        </ul>
+        </ul> */}
+        
       </div>
 
       <div className="flex-1 p-8">

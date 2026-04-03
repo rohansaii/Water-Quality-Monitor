@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +15,7 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  Bell,
   Droplets,
   Activity,
   Navigation,
@@ -21,7 +23,8 @@ import {
   HelpCircle,
   LogOut,
   AlertTriangle,
-} from "lucide-react";
+} 
+from "lucide-react";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -56,7 +59,7 @@ const Profile = () => {
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/auth/me", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -77,12 +80,12 @@ const Profile = () => {
       const token = localStorage.getItem("token");
 
       // Fetch reports count
-      const reportsRes = await fetch("http://127.0.0.1:5000/api/reports", {
+      const reportsRes = await fetch(`${API_BASE_URL}/api/reports`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // Fetch searches count
-      const searchesRes = await fetch("http://127.0.0.1:5000/api/search/history", {
+      const searchesRes = await fetch(`${API_BASE_URL}/api/search/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -102,7 +105,7 @@ const Profile = () => {
   const handleUpdateProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/auth/profile", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -133,7 +136,7 @@ const Profile = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/auth/change-password", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,8 +190,14 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sky-50">
-        <div className="text-sky-600 text-xl font-semibold">Loading profile...</div>
+      <div className="flex h-screen items-center justify-center bg-sky-50 flex-col gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Droplets className="w-6 h-6 text-sky-500" />
+          </div>
+        </div>
+        <p className="text-sky-600 font-semibold text-sm animate-pulse">Loading Profile…</p>
       </div>
     );
   }
@@ -213,63 +222,39 @@ const Profile = () => {
   return (
     <div className="min-h-screen flex bg-sky-50">
       {/* Sidebar */}
-      <div className="w-64 bg-sky-600 text-white flex flex-col p-6 shadow-xl">
-        <h2 className="text-2xl font-bold mb-8 italic flex items-center gap-2">
-          <Droplets className="w-6 h-6" />
-          WQM
+      <aside className="w-64 bg-sky-600 text-white flex flex-col p-5 shadow-xl shrink-0">
+        <h2 className="text-2xl font-black mb-8 italic flex items-center gap-2 px-1">
+          <Droplets className="w-6 h-6" /> WQM
         </h2>
-        <ul className="space-y-2 flex-1">
-          <li
-            onClick={() => navigate("/dashboard")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <Activity className="w-4 h-4" />
-            Dashboard
-          </li>
-          <li
-            onClick={() => navigate("/map")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <MapPin className="w-4 h-4" />
-            Live Map View
-          </li>
-          
-          <li
-            onClick={() => navigate("/alerts")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <AlertTriangle className="w-4 h-4" />
-            System Alerts
-          </li>
-          <li
-            onClick={() => navigate("/search")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <Search className="w-4 h-4" />
-            Search
-          </li>
-          <li
-            onClick={() => navigate("/reports")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            My Reports
-          </li>
-          <li className="bg-white text-sky-600 p-3 rounded-lg cursor-pointer font-bold shadow-md flex items-center gap-2">
-            <User className="w-4 h-4" />
-            Profile
-          </li>
-        </ul>
+        <div className="mb-6 p-4 bg-sky-700/50 rounded-2xl border border-sky-400/30 relative overflow-hidden">
+          <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/30 rounded-full" />
+          <p className="text-[10px] uppercase tracking-widest text-sky-200 mb-1">Session</p>
+          <p className="font-bold text-base leading-tight">{user.name}</p>
+          <span className="mt-2 inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">{user.role}</span>
+        </div>
+        <nav className="flex-1 space-y-1">
+          {[
+            { icon: Activity,      label: "Dashboard",       path: "/dashboard" },
+            { icon: MapPin,        label: "Live Map View",   path: "/map" },
+            { icon: AlertTriangle, label: "System Alerts",  path: "/alerts" },
+            { icon: AlertCircle, label: "Alert History", path: "/alert-history" },
+            { icon: Bell, label: "Auto Alerts", path: "/auto-alerts" },
+            { icon: Search,        label: "Search Stations", path: "/search" },
+            { icon: FileText,      label: "My Reports",      path: "/reports" },
+            { icon: User,          label: "Profile",         path: "/profile" },
+          ].map(({ icon: Icon, label, path }) => (
+            <button key={path} onClick={() => navigate(path)}
+              className={path === "/profile" ? "wqm-sidebar-active w-full text-left" : "wqm-sidebar-item w-full text-left"}>
+              <Icon className="w-4 h-4" /> {label}
+            </button>
+          ))}
+        </nav>
         <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/");
-          }}
-          className="mt-auto bg-white text-sky-600 hover:bg-sky-50 py-2.5 rounded-lg font-bold transition-all shadow-lg"
-        >
-          Logout
+          onClick={() => { localStorage.clear(); navigate("/"); }}
+          className="mt-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm">
+          <LogOut className="w-4 h-4" /> Logout
         </button>
-      </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
@@ -301,9 +286,11 @@ const Profile = () => {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl shadow-sm border border-sky-100 p-6">
               <div className="text-center">
-                {/* Avatar */}
-                <div className="w-24 h-24 bg-sky-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <User className="w-12 h-12 text-sky-600" />
+              {/* Avatar */}
+                <div className="w-24 h-24 bg-gradient-to-br from-sky-400 to-sky-600 rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg ring-4 ring-sky-100">
+                  <span className="text-3xl font-black text-white">
+                    {user.name?.charAt(0)?.toUpperCase() || "U"}
+                  </span>
                 </div>
 
                 <h2 className="text-xl font-bold text-gray-800">{user.name}</h2>
@@ -605,10 +592,6 @@ const Profile = () => {
 
 export default Profile;
 
-
-
-
-// import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 // import {
 //   User,
@@ -672,7 +655,7 @@ export default Profile;
 //   const fetchUserData = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
-//       const response = await fetch("http://127.0.0.1:5000/api/auth/me", {
+//       const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -696,10 +679,10 @@ export default Profile;
 //     try {
 //       const token = localStorage.getItem("token");
 //       const [reportsRes, searchesRes] = await Promise.all([
-//         fetch("http://127.0.0.1:5000/api/reports", {
+//         fetch(`${API_BASE_URL}/api/reports`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         }),
-//         fetch("http://127.0.0.1:5000/api/search/history", {
+//         fetch(`${API_BASE_URL}/api/search/history`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         }),
 //       ]);
@@ -720,7 +703,7 @@ export default Profile;
 //   const handleUpdateProfile = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
-//       const response = await fetch("http://127.0.0.1:5000/api/auth/profile", {
+//       const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
 //         method: "PUT",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -751,7 +734,7 @@ export default Profile;
 
 //     try {
 //       const token = localStorage.getItem("token");
-//       const response = await fetch("http://127.0.0.1:5000/api/auth/change-password", {
+//       const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",

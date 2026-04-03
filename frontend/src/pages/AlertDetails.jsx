@@ -1,5 +1,6 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -12,12 +13,14 @@ import {
   AlertTriangle,
   Clock,
   Info,
-  CheckCircle
+  CheckCircle,
+  Globe
 } from "lucide-react";
 
 const AlertDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const userName = localStorage.getItem("userName") || "User";
   const userRole = localStorage.getItem("userRole") || "citizen";
@@ -25,15 +28,25 @@ const AlertDetails = () => {
   const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(false);
+  const [isUsaAlert, setIsUsaAlert] = useState(false);
 
   useEffect(() => {
-    fetchAlertDetails();
+    // Check if USA alert data was passed via navigation state
+    if (location.state?.alertData) {
+      setAlert(location.state.alertData);
+      setIsUsaAlert(true);
+      setLoading(false);
+    } else if (id && !id.startsWith('usa-')) {
+      fetchAlertDetails();
+    } else {
+      setLoading(false);
+    }
   }, [id]);
 
   const fetchAlertDetails = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://127.0.0.1:5000/api/alerts/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/alerts/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -50,10 +63,11 @@ const AlertDetails = () => {
   };
 
   const handleResolveAlert = async () => {
+    if (isUsaAlert) return; // Can't resolve USGS-generated alerts
     setResolving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://127.0.0.1:5000/api/alerts/${id}/resolve`, {
+      const res = await fetch(`${API_BASE_URL}/api/alerts/${id}/resolve`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -62,7 +76,7 @@ const AlertDetails = () => {
         setAlert({ ...alert, is_resolved: true });
       } else {
         const errData = await res.json();
-        alert("Failed to resolve alert: " + (errData.detail || "Unknown error"));
+        console.error("Failed to resolve alert: " + (errData.detail || "Unknown error"));
       }
     } catch (error) {
       console.error("Error resolving alert:", error);
@@ -95,7 +109,17 @@ const AlertDetails = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen text-xl font-bold">Loading Alert Details...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-sky-50 flex-col gap-4">
+        <div className="relative">
+          <div className="w-16 h-16 rounded-full border-4 border-sky-100 border-t-sky-500 animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Droplets className="w-6 h-6 text-sky-500" />
+          </div>
+        </div>
+        <p className="text-sky-600 font-semibold text-sm animate-pulse">Loading Alert Details…</p>
+      </div>
+    );
   }
 
   if (!alert) {
@@ -111,47 +135,36 @@ const AlertDetails = () => {
 
   return (
     <div className="min-h-screen flex bg-sky-50 text-slate-800 font-sans">
-      {/* Sidebar */}
-      <div className="w-64 bg-sky-600 text-white flex flex-col p-6 shadow-xl">
-        <h2 className="text-2xl font-bold mb-8 italic flex items-center gap-2">
+      <aside className="w-64 bg-sky-600 text-white flex flex-col p-5 shadow-xl shrink-0">
+        <h2 className="text-2xl font-black mb-8 italic flex items-center gap-2 px-1">
           <Droplets className="w-6 h-6" /> WQM
         </h2>
-        <div className="mb-8 p-4 bg-sky-700 rounded-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-sky-600 rounded-full -mr-10 -mt-10 opacity-50"></div>
-          <p className="text-[10px] uppercase tracking-widest text-sky-200 mb-1 z-10 relative">
-            Session
-          </p>
-          <p className="font-bold text-lg leading-tight z-10 relative">
-            {userName}
-          </p>
-          <span className="mt-2 inline-block text-[10px] bg-sky-100 text-sky-800 px-2 py-0.5 rounded-sm font-bold uppercase z-10 relative">
-            {userRole}
-          </span>
+        <div className="mb-6 p-4 bg-sky-700/50 rounded-2xl border border-sky-400/30 relative overflow-hidden">
+          <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/30 rounded-full" />
+          <p className="text-[10px] uppercase tracking-widest text-sky-200 mb-1">Session</p>
+          <p className="font-bold text-base leading-tight">{userName}</p>
+          <span className="mt-2 inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">{userRole}</span>
         </div>
-        <ul className="space-y-2 flex-1">
-          <li onClick={() => navigate("/dashboard")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2">
-            <LayoutDashboard className="w-4 h-4" /> Dashboard
-          </li>
-          <li onClick={() => navigate("/map")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2">
-            <MapPin className="w-4 h-4" /> Live Map View
-          </li>
-          <li onClick={() => navigate("/alerts")} className="bg-white text-sky-600 p-3 rounded-lg cursor-pointer font-bold shadow-md flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" /> System Alerts
-          </li>
-          <li onClick={() => navigate("/search")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2">
-            <Search className="w-4 h-4" /> Search Stations
-          </li>
-          <li onClick={() => navigate("/reports")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2">
-            <FileText className="w-4 h-4" /> My Reports
-          </li>
-          <li onClick={() => navigate("/profile")} className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2">
-            <User className="w-4 h-4" /> Profile
-          </li>
-        </ul>
-        <button onClick={handleLogout} className="mt-auto bg-white text-sky-600 hover:bg-sky-50 py-2.5 rounded-lg font-bold transition-all shadow-lg flex items-center justify-center gap-2">
+        <nav className="flex-1 space-y-1">
+          {[
+            { icon: LayoutDashboard, label: "Dashboard",       path: "/dashboard" },
+            { icon: MapPin,          label: "Live Map View",   path: "/map" },
+            { icon: AlertTriangle,   label: "System Alerts",  path: "/alerts" },
+            { icon: Search,          label: "Search Stations", path: "/search" },
+            { icon: FileText,        label: "My Reports",      path: "/reports" },
+            { icon: User,            label: "Profile",         path: "/profile" },
+          ].map(({ icon: Icon, label, path }) => (
+            <button key={path} onClick={() => navigate(path)}
+              className={path === "/alerts" ? "wqm-sidebar-active w-full text-left" : "wqm-sidebar-item w-full text-left"}>
+              <Icon className="w-4 h-4" /> {label}
+            </button>
+          ))}
+        </nav>
+        <button onClick={handleLogout}
+          className="mt-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm">
           <LogOut className="w-4 h-4" /> Logout
         </button>
-      </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
@@ -166,10 +179,23 @@ const AlertDetails = () => {
           <div className="bg-white rounded-3xl p-8 shadow-md border border-sky-100">
             <div className="flex justify-between items-start mb-6 pb-6 border-b border-gray-100">
               <div>
-                <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider border mb-4 ${getTypeColor(alert.type)}`}>
-                  {alert.type.replace('_', ' ')}
-                </span>
-                <h1 className="text-3xl font-bold text-gray-900 leading-tight">Alert ID #{alert.id} Details</h1>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider border ${getTypeColor(alert.type)}`}>
+                    {alert.type.replace('_', ' ')}
+                  </span>
+                  {/* Country badge */}
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${
+                    alert.country === "USA" || isUsaAlert
+                      ? "bg-blue-50 text-blue-700 border-blue-200" 
+                      : "bg-green-50 text-green-700 border-green-200"
+                  }`}>
+                    <Globe className="w-3 h-3 inline mr-1" />
+                    {alert.country === "USA" || isUsaAlert ? "🇺🇸 USA (USGS Live)" : "🇮🇳 India"}
+                  </span>
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                  {isUsaAlert ? "USGS Alert Details" : `Alert ID #${alert.id} Details`}
+                </h1>
               </div>
               
               <div className="flex items-center gap-2">
@@ -212,8 +238,19 @@ const AlertDetails = () => {
               </div>
             </div>
 
-            {/* Admin/Authority Actions */}
-            {(userRole === "admin" || userRole === "authority") && !alert.is_resolved && (
+            {/* USGS data notice */}
+            {isUsaAlert && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6">
+                <p className="text-blue-800 text-sm font-medium flex items-center gap-2">
+                  <Info className="w-4 h-4" />
+                  This alert was generated from live USGS (U.S. Geological Survey) water quality monitoring data. 
+                  It indicates a threshold violation detected at a USA monitoring station.
+                </p>
+              </div>
+            )}
+
+            {/* Admin/Authority Actions - only for DB alerts */}
+            {!isUsaAlert && (userRole === "admin" || userRole === "authority") && !alert.is_resolved && (
               <div className="mt-8 pt-8 border-t border-gray-100">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Management Actions</h3>
                 <p className="text-gray-600 mb-6">As an authorized user, you can verify and mark this alert as resolved once the issue has been addressed at the location.</p>

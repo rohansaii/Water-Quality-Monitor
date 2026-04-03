@@ -1,16 +1,143 @@
-/* body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-} */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Global Reset & Font ─────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f0f9ff;
+    color: #1e293b;
+  }
+
+  /* Thin sky-coloured scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f0f9ff;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #bae6fd;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
+  }
+}
+
+/* ── Reusable Component Classes ──────────────────────────────── */
+@layer components {
+
+  /* Cards */
+  .wqm-card {
+    @apply bg-white border border-sky-100 rounded-2xl shadow-sm
+           hover:shadow-md transition-all duration-200;
+  }
+  .wqm-card-lg {
+    @apply bg-white border border-sky-100 rounded-3xl shadow-sm
+           hover:shadow-md transition-all duration-200;
+  }
+
+  /* Stat Cards — levitate on hover */
+  .wqm-stat-card {
+    @apply bg-white rounded-2xl p-6 shadow-sm border border-gray-100
+           hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-default;
+  }
+
+  /* Primary Button */
+  .wqm-btn-primary {
+    @apply bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white
+           font-semibold px-5 py-2.5 rounded-xl shadow-sm
+           hover:shadow-md transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Ghost Button */
+  .wqm-btn-ghost {
+    @apply text-sky-700 hover:bg-sky-50 border border-sky-200
+           hover:border-sky-300 font-semibold px-5 py-2.5 rounded-xl
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2;
+  }
+
+  /* Danger Button */
+  .wqm-btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white
+           font-semibold px-5 py-2.5 rounded-xl shadow-sm
+           transition-all duration-200;
+  }
+
+  /* Form Input */
+  .wqm-input {
+    @apply w-full px-4 py-3 border border-gray-200 rounded-xl bg-white
+           text-slate-800 placeholder-gray-400
+           focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500
+           transition-all duration-200;
+  }
+
+  /* Form Label */
+  .wqm-label {
+    @apply block text-sm font-semibold text-gray-700 mb-1.5;
+  }
+
+  /* Sidebar Nav Item */
+  .wqm-sidebar-item {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium
+           text-sky-100 hover:bg-white/15 hover:text-white
+           cursor-pointer transition-all duration-150 select-none;
+  }
+
+  /* Sidebar Active Item */
+  .wqm-sidebar-active {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold
+           bg-white text-sky-600 shadow-md cursor-pointer select-none;
+  }
+
+  /* Table Row hover */
+  .wqm-table-row {
+    @apply border-b border-gray-50 hover:bg-sky-50 transition-colors duration-150;
+  }
+
+  /* Badge */
+  .wqm-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold;
+  }
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@layer utilities {
+  .animate-in {
+    animation: fadeSlideIn 0.25s ease-out both;
+  }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}

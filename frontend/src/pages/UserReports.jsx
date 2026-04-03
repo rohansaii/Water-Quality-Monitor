@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,6 +10,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  Bell,
   Upload,
   Camera,
   Send,
@@ -52,7 +54,7 @@ const UserReports = () => {
   const fetchReports = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/reports", {
+      const response = await fetch(`${API_BASE_URL}/api/reports`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -70,7 +72,7 @@ const UserReports = () => {
   const fetchAllReports = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://127.0.0.1:5000/api/reports/all", {
+      const response = await fetch(`${API_BASE_URL}/api/reports/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -103,7 +105,7 @@ const UserReports = () => {
       const token = localStorage.getItem("token");
 
       // First create the report
-      const response = await fetch("http://127.0.0.1:5000/api/reports", {
+      const response = await fetch(`${API_BASE_URL}/api/reports`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -121,7 +123,7 @@ const UserReports = () => {
           formDataPhoto.append("file", photo);
 
           await fetch(
-            `http://127.0.0.1:5000/api/reports/${newReport.id}/upload-photo`,
+            `${API_BASE_URL}/api/reports/${newReport.id}/upload-photo`,
             {
               method: "POST",
               headers: { Authorization: `Bearer ${token}` },
@@ -153,7 +155,7 @@ const UserReports = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://127.0.0.1:5000/api/reports/${reportId}/status?status=${newStatus}`,
+        `${API_BASE_URL}/api/reports/${reportId}/status?status=${newStatus}`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
@@ -229,62 +231,39 @@ const UserReports = () => {
   return (
     <div className="min-h-screen flex bg-sky-50">
       {/* Sidebar */}
-      <div className="w-64 bg-sky-600 text-white flex flex-col p-6 shadow-xl">
-        <h2 className="text-2xl font-bold mb-8 italic flex items-center gap-2">
-          <Droplets className="w-6 h-6" />
-          WQM
+      <aside className="w-64 bg-sky-600 text-white flex flex-col p-5 shadow-xl shrink-0">
+        <h2 className="text-2xl font-black mb-8 italic flex items-center gap-2 px-1">
+          <Droplets className="w-6 h-6" /> WQM
         </h2>
-        <ul className="space-y-2 flex-1">
-          <li
-            onClick={() => navigate("/dashboard")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <FileText className="w-4 h-4" />
-            Dashboard
-          </li>
-          <li
-            onClick={() => navigate("/map")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <MapPin className="w-4 h-4" />
-            Live Map View
-          </li>
-          <li
-            onClick={() => navigate("/alerts")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <AlertTriangle className="w-4 h-4" />
-            System Alerts
-          </li>
-          <li
-            onClick={() => navigate("/search")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <Clock className="w-4 h-4" />
-            Search
-          </li>
-          <li className="bg-white text-sky-600 p-3 rounded-lg cursor-pointer font-bold shadow-md flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            My Reports
-          </li>
-          <li
-            onClick={() => navigate("/profile")}
-            className="hover:bg-sky-500 p-3 rounded-lg cursor-pointer transition-colors flex items-center gap-2"
-          >
-            <CheckCircle className="w-4 h-4" />
-            Profile
-          </li>
-        </ul>
+        <div className="mb-6 p-4 bg-sky-700/50 rounded-2xl border border-sky-400/30 relative overflow-hidden">
+          <div className="absolute -top-6 -right-6 w-20 h-20 bg-sky-500/30 rounded-full" />
+          <p className="text-[10px] uppercase tracking-widest text-sky-200 mb-1">Session</p>
+          <p className="font-bold text-base leading-tight">{localStorage.getItem("userName") || "User"}</p>
+          <span className="mt-2 inline-block text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">{userRole}</span>
+        </div>
+        <nav className="flex-1 space-y-1">
+          {[
+            { icon: FileText,      label: "Dashboard",       path: "/dashboard" },
+            { icon: MapPin,        label: "Live Map View",   path: "/map" },
+            { icon: AlertTriangle, label: "System Alerts",  path: "/alerts" },
+            { icon: AlertCircle, label: "Alert History", path: "/alert-history" },
+            { icon: Bell, label: "Auto Alerts", path: "/auto-alerts" },
+            { icon: Clock,         label: "Search Stations", path: "/search" },
+            { icon: FileText,      label: "My Reports",      path: "/reports" },
+            { icon: CheckCircle,   label: "Profile",         path: "/profile" },
+          ].map(({ icon: Icon, label, path }) => (
+            <button key={path} onClick={() => navigate(path)}
+              className={path === "/reports" ? "wqm-sidebar-active w-full text-left" : "wqm-sidebar-item w-full text-left"}>
+              <Icon className="w-4 h-4" /> {label}
+            </button>
+          ))}
+        </nav>
         <button
-          onClick={() => {
-            localStorage.clear();
-            navigate("/");
-          }}
-          className="mt-auto bg-white text-sky-600 hover:bg-sky-50 py-2.5 rounded-lg font-bold transition-all shadow-lg"
-        >
-          Logout
+          onClick={() => { localStorage.clear(); navigate("/"); }}
+          className="mt-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 py-2.5 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm">
+          <AlertCircle className="w-4 h-4" /> Logout
         </button>
-      </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
@@ -306,13 +285,13 @@ const UserReports = () => {
         </header>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 bg-white p-1.5 rounded-xl shadow-sm border border-sky-100">
           <button
             onClick={() => setActiveTab("my-reports")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
               activeTab === "my-reports"
-                ? "bg-sky-600 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+                ? "bg-sky-600 text-white shadow-sm"
+                : "text-sky-700 hover:bg-sky-50"
             }`}
           >
             <FileText className="w-4 h-4" />
@@ -320,10 +299,10 @@ const UserReports = () => {
           </button>
           <button
             onClick={() => setActiveTab("submit-report")}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+            className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
               activeTab === "submit-report"
-                ? "bg-sky-600 text-white"
-                : "bg-white text-gray-600 hover:bg-gray-50"
+                ? "bg-sky-600 text-white shadow-sm"
+                : "text-sky-700 hover:bg-sky-50"
             }`}
           >
             <Plus className="w-4 h-4" />
@@ -332,10 +311,10 @@ const UserReports = () => {
           {(userRole === "admin" || userRole === "ngo" || userRole === "authority") && (
             <button
               onClick={() => setActiveTab("all-reports")}
-              className={`px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+              className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
                 activeTab === "all-reports"
-                  ? "bg-sky-600 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-sky-600 text-white shadow-sm"
+                  : "text-sky-700 hover:bg-sky-50"
               }`}
             >
               <Filter className="w-4 h-4" />
@@ -685,10 +664,6 @@ const UserReports = () => {
 
 export default UserReports;
 
-
-
-
-// import { useState, useEffect } from "react";
 // import { useNavigate } from "react-router-dom";
 // import {
 //   FileText,
@@ -751,7 +726,7 @@ export default UserReports;
 //   const fetchReports = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
-//       const response = await fetch("http://127.0.0.1:5000/api/reports", {
+//       const response = await fetch(`${API_BASE_URL}/api/reports`, {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -769,7 +744,7 @@ export default UserReports;
 //   const fetchAllReports = async () => {
 //     try {
 //       const token = localStorage.getItem("token");
-//       const response = await fetch("http://127.0.0.1:5000/api/reports/all", {
+//       const response = await fetch(`${API_BASE_URL}/api/reports/all`, {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -825,7 +800,7 @@ export default UserReports;
 //     try {
 //       const token = localStorage.getItem("token");
 
-//       const response = await fetch("http://127.0.0.1:5000/api/reports", {
+//       const response = await fetch(`${API_BASE_URL}/api/reports`, {
 //         method: "POST",
 //         headers: {
 //           "Content-Type": "application/json",
@@ -842,7 +817,7 @@ export default UserReports;
 //           formDataPhoto.append("file", photo);
 
 //           await fetch(
-//             `http://127.0.0.1:5000/api/reports/${newReport.id}/upload-photo`,
+//             `${API_BASE_URL}/api/reports/${newReport.id}/upload-photo`,
 //             {
 //               method: "POST",
 //               headers: { Authorization: `Bearer ${token}` },
@@ -881,7 +856,7 @@ export default UserReports;
 //     try {
 //       const token = localStorage.getItem("token");
 //       const response = await fetch(
-//         `http://127.0.0.1:5000/api/reports/${reportId}/status?status=${newStatus}`,
+//         `${API_BASE_URL}/api/reports/${reportId}/status?status=${newStatus}`,
 //         {
 //           method: "PUT",
 //           headers: { Authorization: `Bearer ${token}` },
