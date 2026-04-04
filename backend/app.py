@@ -2105,7 +2105,7 @@ def seed_data(db: Session = Depends(get_db)):
     }
 
 
-@app.get("/api/v1/alerts/predictive")
+@app.get("/api/auto-alerts")
 async def get_auto_alerts():
     """
     Auto-generate predictive alerts using ML model on combined India+USA data.
