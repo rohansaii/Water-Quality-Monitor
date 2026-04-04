@@ -879,13 +879,14 @@ def run_seed_background():
                 try: turb_val = float(row.get('B.O.D.', 1.0))
                 except: turb_val = 1.0
 
+                import random
                 station = WaterStation(
                     name=f"Station {row.get('STATION CODE', 'Unknown')}"[:250],
                     location=str(row.get('LOCATIONS', 'Unknown'))[:490],
                     state=str(row.get('STATE', 'Unknown'))[:250],
                     country="India",
-                    latitude=20.5937 + (index * 0.01),
-                    longitude=78.9629 + (index * 0.01),
+                    latitude=random.uniform(8.4, 37.6),
+                    longitude=random.uniform(68.7, 97.2),
                     managed_by="Government"
                 )
                 db.add(station)
@@ -1104,7 +1105,7 @@ def get_station_current_readings(station_id: int, db: Session = Depends(get_db))
 def create_reading(
     station_id: int,
     reading: StationReadingCreate,
-    current_user: User = Depends(require_role(["admin", "authority", "ngo"])),
+    current_user: User = Depends(require_role(["admin", "authority", "ngo", "citizen"])),
     db: Session = Depends(get_db)
 ):
     station = db.query(WaterStation).filter(WaterStation.id == station_id).first()
@@ -1376,6 +1377,7 @@ def update_report_status(
     return report
 
 
+@app.get("/api/alerts")
 async def get_alerts(
     type: Optional[str] = None,
     country: Optional[str] = None,
