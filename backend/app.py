@@ -844,6 +844,63 @@ async def get_stations(
     return result
     
 
+# ==================== REMOTE SEEDING ENDPOINT ====================
+@app.get("/api/system/seed_data")
+def seed_database_render(db: Session = Depends(get_db)):
+    """
+    Seeds the Neon Database directly from the Render server.
+    This bypasses local network firewalls blocking port 5432!
+    """
+    import csv, os
+    
+    # Avoid duplicate seeding
+    if db.query(WaterStation).count() > 0:
+        return {"message": "Database already seeded. You're good to go!"}
+        
+    # Find CSV path
+    csv_path = os.path.join(os.path.dirname(__file__), "water_dataX.csv")
+    if not os.path.exists(csv_path):
+        return {"error": f"CSV file not found at {csv_path}"}
+        
+    stations_added = 0
+    with open(csv_path, mode='r', encoding='utf-8', errors='replace') as f:
+        reader = csv.DictReader(f)
+        for index, row in enumerate(reader):
+            if stations_added >= 100:
+                break
+                
+            try: ph_val = float(row.get('PH', 7.0))
+            except: ph_val = 7.0
+            
+            try: temp_val = float(row.get('Temp', 25.0))
+            except: temp_val = 25.0
+            
+            try: turb_val = float(row.get('B.O.D.', 1.0))
+            except: turb_val = 1.0
+
+            station = WaterStation(
+                name=f"Station {row.get('STATION CODE', 'Unknown')}"[:250],
+                location=str(row.get('LOCATIONS', 'Unknown'))[:490],
+                state=str(row.get('STATE', 'Unknown'))[:250],
+                country="India",
+                latitude=20.5937 + (index * 0.01),
+                longitude=78.9629 + (index * 0.01),
+                managed_by="Government"
+            )
+            db.add(station)
+            db.commit()
+            db.refresh(station)
+            
+            readings = [
+                StationReading(station_id=station.id, parameter="pH", value=ph_val),
+                StationReading(station_id=station.id, parameter="temperature", value=temp_val),
+                StationReading(station_id=station.id, parameter="turbidity", value=turb_val),
+            ]
+            db.add_all(readings)
+            db.commit()
+            stations_added += 1
+            
+    return {"message": f"Successfully injected {stations_added} stations directly from the Render server!"}
 
 # ✅ FIX: STATIC ROUTE MUST COME BEFORE DYNAMIC ROUTE
 @app.get("/api/stations/count")
