@@ -866,6 +866,43 @@ def run_seed_background():
             print(f"CSV file not found at {csv_path}")
             return
             
+        # State → (lat_center, lng_center, scatter_range, region_name)
+        STATE_COORDS = {
+            "ANDHRA PRADESH":      (15.9129, 79.7400, 2.5, "South India"),
+            "ARUNACHAL PRADESH":   (28.2180, 94.7278, 2.0, "Northeast India"),
+            "ASSAM":               (26.2006, 92.9376, 1.5, "Northeast India"),
+            "BIHAR":               (25.0961, 85.3131, 1.5, "East India"),
+            "CHHATTISGARH":        (21.2787, 81.8661, 2.0, "Central India"),
+            "GOA":                 (15.2993, 74.1240, 0.3, "West India"),
+            "GUJARAT":             (22.2587, 71.1924, 2.5, "West India"),
+            "HARYANA":             (29.0588, 76.0856, 1.2, "North India"),
+            "HIMACHAL PRADESH":    (31.1048, 77.1734, 1.5, "North India"),
+            "JHARKHAND":           (23.6102, 85.2799, 1.5, "East India"),
+            "KARNATAKA":           (15.3173, 75.7139, 2.5, "South India"),
+            "KERALA":              (10.8505, 76.2711, 1.5, "South India"),
+            "MADHYA PRADESH":      (22.9734, 78.6569, 2.5, "Central India"),
+            "MAHARASHTRA":         (19.7515, 75.7139, 2.5, "West India"),
+            "MANIPUR":             (24.6637, 93.9063, 0.8, "Northeast India"),
+            "MEGHALAYA":           (25.4670, 91.3662, 0.8, "Northeast India"),
+            "MIZORAM":             (23.1645, 92.9376, 0.8, "Northeast India"),
+            "NAGALAND":            (26.1584, 94.5624, 0.6, "Northeast India"),
+            "ODISHA":              (20.9517, 85.0985, 2.0, "East India"),
+            "PUNJAB":              (31.1471, 75.3412, 1.2, "North India"),
+            "RAJASTHAN":           (27.0238, 74.2179, 3.0, "North India"),
+            "SIKKIM":              (27.5330, 88.5122, 0.4, "Northeast India"),
+            "TAMILNADU":           (11.1271, 78.6569, 2.0, "South India"),
+            "TAMIL NADU":          (11.1271, 78.6569, 2.0, "South India"),
+            "TELANGANA":           (18.1124, 79.0193, 1.5, "South India"),
+            "TRIPURA":             (23.9408, 91.9882, 0.5, "Northeast India"),
+            "UTTAR PRADESH":       (26.8467, 80.9462, 2.5, "North India"),
+            "UTTARAKHAND":         (30.0668, 79.0193, 1.5, "North India"),
+            "WEST BENGAL":         (22.9868, 87.8550, 1.8, "East India"),
+            "DAMAN & DIU":         (20.3974, 72.8328, 0.2, "West India"),
+            "DELHI":               (28.7041, 77.1025, 0.3, "North India"),
+            "JAMMU AND KASHMIR":   (33.7782, 76.5762, 2.0, "North India"),
+            "PUDUCHERRY":          (11.9416, 79.8083, 0.2, "South India"),
+        }
+
         stations_added = 0
         with open(csv_path, mode='r', encoding='utf-8', errors='replace') as f:
             reader = csv.DictReader(f)
@@ -880,13 +917,24 @@ def run_seed_background():
                 except: turb_val = 1.0
 
                 import random
+                state_val = str(row.get('STATE', '')).strip().upper()
+                if state_val in STATE_COORDS:
+                    lat_c, lng_c, scatter, region_name = STATE_COORDS[state_val]
+                    lat = lat_c + random.uniform(-scatter, scatter)
+                    lng = lng_c + random.uniform(-scatter, scatter)
+                else:
+                    lat = random.uniform(8.4, 37.6)
+                    lng = random.uniform(68.7, 97.2)
+                    region_name = "Central India"
+
                 station = WaterStation(
                     name=f"Station {row.get('STATION CODE', 'Unknown')}"[:250],
                     location=str(row.get('LOCATIONS', 'Unknown'))[:490],
                     state=str(row.get('STATE', 'Unknown'))[:250],
+                    region=region_name,
                     country="India",
-                    latitude=random.uniform(8.4, 37.6),
-                    longitude=random.uniform(68.7, 97.2),
+                    latitude=lat,
+                    longitude=lng,
                     managed_by="Government"
                 )
                 db.add(station)
@@ -928,6 +976,80 @@ def seed_database_render(background_tasks: BackgroundTasks):
     """
     background_tasks.add_task(run_seed_background)
     return {"message": "Data injection started in the background! Please wait 2-3 minutes for the 1,991 stations to finish loading, then refresh your dashboard."}
+
+
+def run_fix_coords_background():
+    """Fix existing stations: assign state-based coords and region field."""
+    import random
+    STATE_COORDS = {
+        "ANDHRA PRADESH":    (15.9129, 79.7400, 2.5, "South India"),
+        "ARUNACHAL PRADESH": (28.2180, 94.7278, 2.0, "Northeast India"),
+        "ASSAM":             (26.2006, 92.9376, 1.5, "Northeast India"),
+        "BIHAR":             (25.0961, 85.3131, 1.5, "East India"),
+        "CHHATTISGARH":      (21.2787, 81.8661, 2.0, "Central India"),
+        "GOA":               (15.2993, 74.1240, 0.3, "West India"),
+        "GUJARAT":           (22.2587, 71.1924, 2.5, "West India"),
+        "HARYANA":           (29.0588, 76.0856, 1.2, "North India"),
+        "HIMACHAL PRADESH":  (31.1048, 77.1734, 1.5, "North India"),
+        "JHARKHAND":         (23.6102, 85.2799, 1.5, "East India"),
+        "KARNATAKA":         (15.3173, 75.7139, 2.5, "South India"),
+        "KERALA":            (10.8505, 76.2711, 1.5, "South India"),
+        "MADHYA PRADESH":    (22.9734, 78.6569, 2.5, "Central India"),
+        "MAHARASHTRA":       (19.7515, 75.7139, 2.5, "West India"),
+        "MANIPUR":           (24.6637, 93.9063, 0.8, "Northeast India"),
+        "MEGHALAYA":         (25.4670, 91.3662, 0.8, "Northeast India"),
+        "MIZORAM":           (23.1645, 92.9376, 0.8, "Northeast India"),
+        "NAGALAND":          (26.1584, 94.5624, 0.6, "Northeast India"),
+        "ODISHA":            (20.9517, 85.0985, 2.0, "East India"),
+        "PUNJAB":            (31.1471, 75.3412, 1.2, "North India"),
+        "RAJASTHAN":         (27.0238, 74.2179, 3.0, "North India"),
+        "SIKKIM":            (27.5330, 88.5122, 0.4, "Northeast India"),
+        "TAMILNADU":         (11.1271, 78.6569, 2.0, "South India"),
+        "TAMIL NADU":        (11.1271, 78.6569, 2.0, "South India"),
+        "TELANGANA":         (18.1124, 79.0193, 1.5, "South India"),
+        "TRIPURA":           (23.9408, 91.9882, 0.5, "Northeast India"),
+        "UTTAR PRADESH":     (26.8467, 80.9462, 2.5, "North India"),
+        "UTTARAKHAND":       (30.0668, 79.0193, 1.5, "North India"),
+        "WEST BENGAL":       (22.9868, 87.8550, 1.8, "East India"),
+        "DAMAN & DIU":       (20.3974, 72.8328, 0.2, "West India"),
+        "DELHI":             (28.7041, 77.1025, 0.3, "North India"),
+        "JAMMU AND KASHMIR": (33.7782, 76.5762, 2.0, "North India"),
+        "PUDUCHERRY":        (11.9416, 79.8083, 0.2, "South India"),
+    }
+    db = SessionLocal()
+    try:
+        stations = db.query(WaterStation).filter(WaterStation.country == "India").all()
+        print(f"[fix_coords] Found {len(stations)} Indian stations to fix...")
+        updated = 0
+        for station in stations:
+            state_key = (station.state or "").strip().upper()
+            if state_key in STATE_COORDS:
+                lat_c, lng_c, scatter, region_name = STATE_COORDS[state_key]
+                station.latitude  = lat_c + random.uniform(-scatter, scatter)
+                station.longitude = lng_c + random.uniform(-scatter, scatter)
+                station.region    = region_name
+            else:
+                station.latitude  = random.uniform(8.4, 37.6)
+                station.longitude = random.uniform(68.7, 97.2)
+                station.region    = "Central India"
+            updated += 1
+            if updated % 200 == 0:
+                db.commit()
+                print(f"[fix_coords]   {updated}/{len(stations)} updated...")
+        db.commit()
+        print(f"[fix_coords] ✅ Done! Fixed {updated} stations.")
+    except Exception as e:
+        print(f"[fix_coords] ERROR: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
+@app.get("/api/system/fix_coords")
+def fix_station_coords(background_tasks: BackgroundTasks):
+    """One-time fix: assigns state-based map coordinates and region field to all Indian stations."""
+    background_tasks.add_task(run_fix_coords_background)
+    return {"message": "Coordinate fix started in background. Check server logs in ~60 seconds."}
 
 # ✅ FIX: STATIC ROUTE MUST COME BEFORE DYNAMIC ROUTE
 @app.get("/api/stations/count")
