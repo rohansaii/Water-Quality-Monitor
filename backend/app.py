@@ -1023,15 +1023,51 @@ def run_fix_coords_background():
         updated = 0
         for station in stations:
             state_key = (station.state or "").strip().upper()
+            loc_upper = (station.location or "").strip().upper()
+            
+            matched_state = None
+            
+            # 1. Try exact match on state
             if state_key in STATE_COORDS:
-                lat_c, lng_c, scatter, region_name = STATE_COORDS[state_key]
+                matched_state = state_key
+            else:
+                # 2. Try substring match in state or location
+                for sk in STATE_COORDS.keys():
+                    if sk in state_key or sk in loc_upper:
+                        matched_state = sk
+                        break
+                
+                # 3. Special substring matches for common abbreviations
+                if not matched_state:
+                    if "M.P." in loc_upper or "M.P" in loc_upper or "MADHYA" in loc_upper: matched_state = "MADHYA PRADESH"
+                    elif "U.P." in loc_upper or "U.P" in loc_upper or "UTTAR" in loc_upper: matched_state = "UTTAR PRADESH"
+                    elif "A.P." in loc_upper or "A.P" in loc_upper or "ANDHRA" in loc_upper: matched_state = "ANDHRA PRADESH"
+                    elif "W.B." in loc_upper or "W.B" in loc_upper or "BENGAL" in loc_upper: matched_state = "WEST BENGAL"
+                    elif "H.P." in loc_upper or "H.P" in loc_upper or "HIMACHAL" in loc_upper: matched_state = "HIMACHAL PRADESH"
+                    elif "J&K" in loc_upper or "JAMMU" in loc_upper or "KASHMIR" in loc_upper: matched_state = "JAMMU AND KASHMIR"
+                    elif "RAJ" in loc_upper: matched_state = "RAJASTHAN"
+                    elif "GUJ" in loc_upper: matched_state = "GUJARAT"
+                    elif "MAHA" in loc_upper: matched_state = "MAHARASHTRA"
+                    elif "TN" in loc_upper or "TAMIL" in loc_upper: matched_state = "TAMIL NADU"
+                    elif "KER" in loc_upper: matched_state = "KERALA"
+                    elif "KAR" in loc_upper: matched_state = "KARNATAKA"
+                    elif "ODISHA" in loc_upper or "ORISSA" in loc_upper: matched_state = "ODISHA"
+
+            if matched_state:
+                lat_c, lng_c, scatter, region_name = STATE_COORDS[matched_state]
                 station.latitude  = lat_c + random.uniform(-scatter, scatter)
                 station.longitude = lng_c + random.uniform(-scatter, scatter)
                 station.region    = region_name
+                # Normalize state string gracefully
+                station.state = matched_state
             else:
-                station.latitude  = random.uniform(8.4, 37.6)
-                station.longitude = random.uniform(68.7, 97.2)
+                # If STILL no state was found, do NOT scatter broadly.
+                # Put it in a central default with a small radius so it looks somewhat ok.
+                station.latitude  = 22.9734 + random.uniform(-2, 2)  # Central India
+                station.longitude = 78.6569 + random.uniform(-2, 2)
                 station.region    = "Central India"
+                station.state     = "UNKNOWN"
+                
             updated += 1
             if updated % 200 == 0:
                 db.commit()
