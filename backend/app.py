@@ -1259,6 +1259,7 @@ def get_search_history(
     return searches
 
 
+@app.get("/api/reports")
 def get_my_reports(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -1269,6 +1270,7 @@ def get_my_reports(
     return reports
 
 
+@app.get("/api/reports/all")
 def get_all_reports(
     current_user: User = Depends(require_role(["admin", "ngo", "authority"])),
     status_filter: Optional[str] = None,
@@ -1283,6 +1285,7 @@ def get_all_reports(
     return reports
 
 
+@app.get("/api/reports/{report_id}")
 def get_report(
     report_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -1299,6 +1302,7 @@ def get_report(
     return report
 
 
+@app.post("/api/reports", response_model=ReportResponse)
 def create_report(
     report: ReportCreate,
     current_user: User = Depends(get_current_active_user),
@@ -1317,6 +1321,7 @@ def create_report(
     return db_report
 
 
+@app.post("/api/reports/{report_id}/upload-photo")
 def upload_report_photo(
     report_id: int,
     file: UploadFile = File(...),
@@ -1344,6 +1349,7 @@ def upload_report_photo(
     return {"photo_url": report.photo_url}
 
 
+@app.put("/api/reports/{report_id}/status")
 def update_report_status(
     report_id: int,
     status: str,

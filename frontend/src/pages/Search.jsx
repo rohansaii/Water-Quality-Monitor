@@ -387,7 +387,6 @@ const SearchPage = () => {
                   onChange={(option) => setSelectedState(option)}
                   placeholder="Search States..."
                   isSearchable={true}
-                  isDisabled={!selectedRegion || selectedRegion.value === ""}
                   className="w-full text-sm"
                   styles={{ control: (base) => ({ ...base, borderRadius: '0.5rem', padding: '0.125rem', borderColor: '#e5e7eb' }) }}
                 />
