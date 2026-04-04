@@ -845,67 +845,88 @@ async def get_stations(
     
 
 # ==================== REMOTE SEEDING ENDPOINT ====================
+from fastapi import BackgroundTasks
+
+def run_seed_background():
+    import csv, os
+    from sqlalchemy import text
+    
+    db = SessionLocal()
+    try:
+        current_count = db.query(WaterStation).count()
+        if current_count == 1991:
+            print("Database already perfectly seeded.")
+            return
+        elif current_count > 0:
+            db.execute(text("TRUNCATE TABLE water_stations CASCADE;"))
+            db.commit()
+            
+        csv_path = os.path.join(os.path.dirname(__file__), "water_dataX.csv")
+        if not os.path.exists(csv_path):
+            print(f"CSV file not found at {csv_path}")
+            return
+            
+        stations_added = 0
+        with open(csv_path, mode='r', encoding='utf-8', errors='replace') as f:
+            reader = csv.DictReader(f)
+            for index, row in enumerate(reader):
+                try: ph_val = float(row.get('PH', 7.0))
+                except: ph_val = 7.0
+                
+                try: temp_val = float(row.get('Temp', 25.0))
+                except: temp_val = 25.0
+                
+                try: turb_val = float(row.get('B.O.D.', 1.0))
+                except: turb_val = 1.0
+
+                station = WaterStation(
+                    name=f"Station {row.get('STATION CODE', 'Unknown')}"[:250],
+                    location=str(row.get('LOCATIONS', 'Unknown'))[:490],
+                    state=str(row.get('STATE', 'Unknown'))[:250],
+                    country="India",
+                    latitude=20.5937 + (index * 0.01),
+                    longitude=78.9629 + (index * 0.01),
+                    managed_by="Government"
+                )
+                db.add(station)
+                db.flush()
+                
+                readings = [
+                    StationReading(station_id=station.id, parameter="pH", value=ph_val),
+                    StationReading(station_id=station.id, parameter="temperature", value=temp_val),
+                    StationReading(station_id=station.id, parameter="turbidity", value=turb_val),
+                ]
+                db.add_all(readings)
+                
+                # Mock auto-alerts for bad water quality
+                if ph_val < 6.5 or ph_val > 8.5 or turb_val > 5.0:
+                    alert = Alert(
+                        station_id=station.id,
+                        type=AlertType.CONTAMINATION.value if turb_val > 5.0 else "water_quality",
+                        message=f"Critical water quality parameters detected: pH={ph_val}, Turbidity={turb_val}",
+                        location=station.location,
+                        source="predictive"
+                    )
+                    db.add(alert)
+                    
+                stations_added += 1
+                
+            db.commit()
+        print(f"Successfully background injected {stations_added} stations!")
+    except Exception as e:
+        print(f"Background seed failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
 @app.get("/api/system/seed_data")
-def seed_database_render(db: Session = Depends(get_db)):
+def seed_database_render(background_tasks: BackgroundTasks):
     """
     Seeds the Neon Database directly from the Render server.
-    This bypasses local network firewalls blocking port 5432!
+    This bypasses local network firewalls AND Render's 60s timeout!
     """
-    import csv, os
-    
-    current_count = db.query(WaterStation).count()
-    if current_count >= 1900:
-        return {"message": "Database already fully seeded. You're good to go!"}
-    elif current_count > 0:
-        # Clear partial data so we can cleanly insert all 1991 without duplicates
-        # Must delete child records first to avoid PostgreSQL foreign key IntegrityError!
-        from sqlalchemy import text
-        db.execute(text("TRUNCATE TABLE water_stations CASCADE;"))
-        db.commit()
-        
-    # Find CSV path
-    csv_path = os.path.join(os.path.dirname(__file__), "water_dataX.csv")
-    if not os.path.exists(csv_path):
-        return {"error": f"CSV file not found at {csv_path}"}
-        
-    stations_added = 0
-    with open(csv_path, mode='r', encoding='utf-8', errors='replace') as f:
-        reader = csv.DictReader(f)
-        for index, row in enumerate(reader):
-            # Parse numeric values safely
-            try: ph_val = float(row.get('PH', 7.0))
-            except: ph_val = 7.0
-            
-            try: temp_val = float(row.get('Temp', 25.0))
-            except: temp_val = 25.0
-            
-            try: turb_val = float(row.get('B.O.D.', 1.0))
-            except: turb_val = 1.0
-
-            station = WaterStation(
-                name=f"Station {row.get('STATION CODE', 'Unknown')}"[:250],
-                location=str(row.get('LOCATIONS', 'Unknown'))[:490],
-                state=str(row.get('STATE', 'Unknown'))[:250],
-                country="India",
-                latitude=20.5937 + (index * 0.01),
-                longitude=78.9629 + (index * 0.01),
-                managed_by="Government"
-            )
-            db.add(station)
-            db.flush()  # Flush gives us the station.id without a full network commit roundtrip
-            
-            readings = [
-                StationReading(station_id=station.id, parameter="pH", value=ph_val),
-                StationReading(station_id=station.id, parameter="temperature", value=temp_val),
-                StationReading(station_id=station.id, parameter="turbidity", value=turb_val),
-            ]
-            db.add_all(readings)
-            stations_added += 1
-            
-        # Commit all 1991 stations and readings in one massive efficient transaction
-        db.commit()
-            
-    return {"message": f"Successfully injected all {stations_added} stations directly from the Render server!"}
+    background_tasks.add_task(run_seed_background)
+    return {"message": "Data injection started in the background! Please wait 2-3 minutes for the 1,991 stations to finish loading, then refresh your dashboard."}
 
 # ✅ FIX: STATIC ROUTE MUST COME BEFORE DYNAMIC ROUTE
 @app.get("/api/stations/count")
@@ -2082,6 +2103,7 @@ def seed_data(db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/v1/alerts/predictive")
 async def get_auto_alerts():
     """
     Auto-generate predictive alerts using ML model on combined India+USA data.
