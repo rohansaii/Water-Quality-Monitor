@@ -982,39 +982,39 @@ def run_fix_coords_background():
     """Fix existing stations: assign state-based coords and region field."""
     import random
     STATE_COORDS = {
-        "ANDHRA PRADESH":    (15.9129, 79.7400, 2.5, "South India"),
-        "ARUNACHAL PRADESH": (28.2180, 94.7278, 2.0, "Northeast India"),
-        "ASSAM":             (26.2006, 92.9376, 1.5, "Northeast India"),
-        "BIHAR":             (25.0961, 85.3131, 1.5, "East India"),
-        "CHHATTISGARH":      (21.2787, 81.8661, 2.0, "Central India"),
-        "GOA":               (15.2993, 74.1240, 0.3, "West India"),
-        "GUJARAT":           (22.2587, 71.1924, 2.5, "West India"),
-        "HARYANA":           (29.0588, 76.0856, 1.2, "North India"),
-        "HIMACHAL PRADESH":  (31.1048, 77.1734, 1.5, "North India"),
-        "JHARKHAND":         (23.6102, 85.2799, 1.5, "East India"),
-        "KARNATAKA":         (15.3173, 75.7139, 2.5, "South India"),
-        "KERALA":            (10.8505, 76.2711, 1.5, "South India"),
-        "MADHYA PRADESH":    (22.9734, 78.6569, 2.5, "Central India"),
-        "MAHARASHTRA":       (19.7515, 75.7139, 2.5, "West India"),
-        "MANIPUR":           (24.6637, 93.9063, 0.8, "Northeast India"),
-        "MEGHALAYA":         (25.4670, 91.3662, 0.8, "Northeast India"),
-        "MIZORAM":           (23.1645, 92.9376, 0.8, "Northeast India"),
-        "NAGALAND":          (26.1584, 94.5624, 0.6, "Northeast India"),
-        "ODISHA":            (20.9517, 85.0985, 2.0, "East India"),
-        "PUNJAB":            (31.1471, 75.3412, 1.2, "North India"),
-        "RAJASTHAN":         (27.0238, 74.2179, 3.0, "North India"),
-        "SIKKIM":            (27.5330, 88.5122, 0.4, "Northeast India"),
-        "TAMILNADU":         (11.1271, 78.6569, 2.0, "South India"),
-        "TAMIL NADU":        (11.1271, 78.6569, 2.0, "South India"),
-        "TELANGANA":         (18.1124, 79.0193, 1.5, "South India"),
-        "TRIPURA":           (23.9408, 91.9882, 0.5, "Northeast India"),
-        "UTTAR PRADESH":     (26.8467, 80.9462, 2.5, "North India"),
-        "UTTARAKHAND":       (30.0668, 79.0193, 1.5, "North India"),
-        "WEST BENGAL":       (22.9868, 87.8550, 1.8, "East India"),
-        "DAMAN & DIU":       (20.3974, 72.8328, 0.2, "West India"),
-        "DELHI":             (28.7041, 77.1025, 0.3, "North India"),
-        "JAMMU AND KASHMIR": (33.7782, 76.5762, 2.0, "North India"),
-        "PUDUCHERRY":        (11.9416, 79.8083, 0.2, "South India"),
+        "ANDHRA PRADESH":    (15.9129, 79.7400, 0.5, "South India"),
+        "ARUNACHAL PRADESH": (28.2180, 94.7278, 0.4, "Northeast India"),
+        "ASSAM":             (26.2006, 92.9376, 0.5, "Northeast India"),
+        "BIHAR":             (25.0961, 85.3131, 0.5, "East India"),
+        "CHHATTISGARH":      (21.2787, 81.8661, 0.6, "Central India"),
+        "GOA":               (15.2993, 74.1240, 0.1, "West India"),
+        "GUJARAT":           (22.7587, 71.6924, 0.6, "West India"),
+        "HARYANA":           (29.0588, 76.0856, 0.3, "North India"),
+        "HIMACHAL PRADESH":  (31.1048, 77.1734, 0.4, "North India"),
+        "JHARKHAND":         (23.6102, 85.2799, 0.4, "East India"),
+        "KARNATAKA":         (14.3173, 75.7139, 0.6, "South India"),
+        "KERALA":            (10.3505, 76.4711, 0.2, "South India"),
+        "MADHYA PRADESH":    (23.4734, 78.6569, 0.8, "Central India"),
+        "MAHARASHTRA":       (19.2515, 75.7139, 0.8, "West India"),
+        "MANIPUR":           (24.6637, 93.9063, 0.1, "Northeast India"),
+        "MEGHALAYA":         (25.4670, 91.3662, 0.1, "Northeast India"),
+        "MIZORAM":           (23.1645, 92.9376, 0.1, "Northeast India"),
+        "NAGALAND":          (26.1584, 94.5624, 0.1, "Northeast India"),
+        "ODISHA":            (20.9517, 84.0985, 0.6, "East India"),
+        "PUNJAB":            (31.1471, 75.3412, 0.3, "North India"),
+        "RAJASTHAN":         (26.5238, 73.7179, 0.8, "North India"),
+        "SIKKIM":            (27.5330, 88.5122, 0.1, "Northeast India"),
+        "TAMILNADU":         (11.1271, 78.6569, 0.5, "South India"),
+        "TAMIL NADU":        (11.1271, 78.6569, 0.5, "South India"),
+        "TELANGANA":         (17.8124, 79.0193, 0.5, "South India"),
+        "TRIPURA":           (23.9408, 91.9882, 0.1, "Northeast India"),
+        "UTTAR PRADESH":     (27.0467, 80.9462, 0.8, "North India"),
+        "UTTARAKHAND":       (30.0668, 79.0193, 0.3, "North India"),
+        "WEST BENGAL":       (23.2868, 87.8550, 0.4, "East India"),
+        "DAMAN & DIU":       (20.3974, 72.8328, 0.05, "West India"),
+        "DELHI":             (28.7041, 77.1025, 0.05, "North India"),
+        "JAMMU AND KASHMIR": (33.7782, 76.5762, 0.5, "North India"),
+        "PUDUCHERRY":        (11.9416, 79.8083, 0.05, "South India"),
     }
     db = SessionLocal()
     try:
@@ -1063,8 +1063,8 @@ def run_fix_coords_background():
             else:
                 # If STILL no state was found, do NOT scatter broadly.
                 # Put it in a central default with a small radius so it looks somewhat ok.
-                station.latitude  = 22.9734 + random.uniform(-2, 2)  # Central India
-                station.longitude = 78.6569 + random.uniform(-2, 2)
+                station.latitude  = 23.2 + random.uniform(-0.5, 0.5)  # Central India
+                station.longitude = 79.0 + random.uniform(-0.5, 0.5)
                 station.region    = "Central India"
                 station.state     = "UNKNOWN"
                 
