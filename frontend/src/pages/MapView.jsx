@@ -783,10 +783,16 @@ const MapBounds = ({ stations }) => {
   const map = useMap();
   useEffect(() => {
     if (stations.length > 0) {
-      const bounds = L.latLngBounds(
-        stations.map((s) => [s.latitude, s.longitude])
+      const validStations = stations.filter(
+        (s) => s.latitude !== 0 && s.longitude !== 0 &&
+               !isNaN(s.latitude) && !isNaN(s.longitude)
       );
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+      if (validStations.length > 0) {
+        const bounds = L.latLngBounds(
+          validStations.map((s) => [s.latitude, s.longitude])
+        );
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+      }
     }
   }, [map, stations]);
   return null;
@@ -807,6 +813,9 @@ const MapView = () => {
   const [stateCode, setStateCode] = useState("CA");
 
   useEffect(() => {
+    setStations([]);
+    setFilteredStations([]);
+    setLoading(true);
     fetchStations();
   }, [country, stateCode]);
 
@@ -824,12 +833,20 @@ const MapView = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const validated = data.map((s) => ({
-          ...s,
-          latitude: parseFloat(s.latitude) || 20.5937,
-          longitude: parseFloat(s.longitude) || 78.9629,
-          status: s.status || "Unknown",
-        }));
+        const validated = data
+          .map((s) => ({
+            ...s,
+            latitude: parseFloat(s.latitude),
+            longitude: parseFloat(s.longitude),
+            status: s.status || "Unknown",
+          }))
+          .filter(
+            (s) =>
+              !isNaN(s.latitude) &&
+              !isNaN(s.longitude) &&
+              s.latitude !== 0 &&
+              s.longitude !== 0
+          );
         setStations(validated);
         setFilteredStations(validated);
       }
@@ -1080,8 +1097,13 @@ const MapView = () => {
         <div className="flex-1 p-4">
           <div className="h-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white">
             <MapContainer
-              center={[20.5937, 78.9629]}
-              zoom={5}
+              key={`${country}-${stateCode}`}
+              center={
+                country === "USA"
+                  ? [39.5, -98.35]
+                  : [20.5937, 78.9629]
+              }
+              zoom={country === "USA" ? 5 : 5}
               style={{ height: "100%", width: "100%" }}
               scrollWheelZoom
             >
