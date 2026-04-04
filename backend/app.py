@@ -866,9 +866,7 @@ def seed_database_render(db: Session = Depends(get_db)):
     with open(csv_path, mode='r', encoding='utf-8', errors='replace') as f:
         reader = csv.DictReader(f)
         for index, row in enumerate(reader):
-            if stations_added >= 100:
-                break
-                
+            # Parse numeric values safely
             try: ph_val = float(row.get('PH', 7.0))
             except: ph_val = 7.0
             
@@ -888,8 +886,7 @@ def seed_database_render(db: Session = Depends(get_db)):
                 managed_by="Government"
             )
             db.add(station)
-            db.commit()
-            db.refresh(station)
+            db.flush()  # Flush gives us the station.id without a full network commit roundtrip
             
             readings = [
                 StationReading(station_id=station.id, parameter="pH", value=ph_val),
@@ -897,10 +894,12 @@ def seed_database_render(db: Session = Depends(get_db)):
                 StationReading(station_id=station.id, parameter="turbidity", value=turb_val),
             ]
             db.add_all(readings)
-            db.commit()
             stations_added += 1
             
-    return {"message": f"Successfully injected {stations_added} stations directly from the Render server!"}
+        # Commit all 1991 stations and readings in one massive efficient transaction
+        db.commit()
+            
+    return {"message": f"Successfully injected all {stations_added} stations directly from the Render server!"}
 
 # ✅ FIX: STATIC ROUTE MUST COME BEFORE DYNAMIC ROUTE
 @app.get("/api/stations/count")
