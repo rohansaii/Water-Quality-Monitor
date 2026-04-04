@@ -858,7 +858,9 @@ def seed_database_render(db: Session = Depends(get_db)):
         return {"message": "Database already fully seeded. You're good to go!"}
     elif current_count > 0:
         # Clear partial data so we can cleanly insert all 1991 without duplicates
-        db.query(WaterStation).delete()
+        # Must delete child records first to avoid PostgreSQL foreign key IntegrityError!
+        from sqlalchemy import text
+        db.execute(text("TRUNCATE TABLE water_stations CASCADE;"))
         db.commit()
         
     # Find CSV path
