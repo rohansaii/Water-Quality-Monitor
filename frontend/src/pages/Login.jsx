@@ -32,23 +32,7 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login Error:", error);
-      // Fallback to legacy endpoint
-      try {
-        const legacyResponse = await fetch(`${API_BASE_URL}/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const legacyData = await legacyResponse.json();
-        if (legacyResponse.ok) {
-          localStorage.setItem("token", legacyData.token || legacyData.access_token);
-          localStorage.setItem("userName", legacyData.user?.name || "User");
-          localStorage.setItem("userRole", legacyData.user?.role || "citizen");
-          navigate("/dashboard");
-          return;
-        }
-      } catch {}
-      alert("Cannot connect to server. Please check if the backend is running.");
+      alert("Server Error. The backend database connection has failed (500). Please check your Render configuration.");
     } finally {
       setLoading(false);
     }

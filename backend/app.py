@@ -32,10 +32,22 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 db_url = os.environ.get("DATABASE_URL", "postgresql://postgres:3906DW82@localhost:5432/watermonitor")
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+# Ensure Neon requires SSL mode
+if "neon.tech" in db_url and "sslmode=require" not in db_url:
+    if "?" in db_url:
+        db_url += "&sslmode=require"
+    else:
+        db_url += "?sslmode=require"
+
 DATABASE_URL = db_url
 
-# Create engine and session
-engine = create_engine(DATABASE_URL)
+# Create engine and session with connection resiliency for serverless databases
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,       # Verifies connection is alive before using it
+    pool_recycle=1800,        # Recycles connections after 30 mins
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

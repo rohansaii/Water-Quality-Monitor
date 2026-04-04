@@ -44,22 +44,11 @@ const Signup = () => {
         alert("Registration Successful! Please sign in.");
         navigate("/");
       } else {
-        alert(data.detail || "Registration failed");
+        alert(data.detail || data.message || "Registration failed");
       }
     } catch (error) {
       console.error("Registration error:", error);
-      try {
-        const legacyResponse = await fetch(`${API_BASE_URL}/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: formData.name, email: formData.email, role: formData.role, password: formData.password }),
-        });
-        const legacyData = await legacyResponse.json();
-        if (legacyResponse.ok) { alert("Registration Successful!"); navigate("/"); return; }
-        else alert(legacyData.message || "Registration failed");
-      } catch {
-        alert("Server Error. Please check if the backend is running.");
-      }
+      alert("Server Error. The backend might be restarting or there is a database issue (500). Please try again in a few seconds or check backend logs.");
     } finally {
       setLoading(false);
     }
