@@ -853,9 +853,13 @@ def seed_database_render(db: Session = Depends(get_db)):
     """
     import csv, os
     
-    # Avoid duplicate seeding
-    if db.query(WaterStation).count() > 0:
-        return {"message": "Database already seeded. You're good to go!"}
+    current_count = db.query(WaterStation).count()
+    if current_count >= 1900:
+        return {"message": "Database already fully seeded. You're good to go!"}
+    elif current_count > 0:
+        # Clear partial data so we can cleanly insert all 1991 without duplicates
+        db.query(WaterStation).delete()
+        db.commit()
         
     # Find CSV path
     csv_path = os.path.join(os.path.dirname(__file__), "water_dataX.csv")
